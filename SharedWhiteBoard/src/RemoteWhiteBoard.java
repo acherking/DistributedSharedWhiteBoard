@@ -15,8 +15,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhiteBoard {
     private JFrame baseJFrame;
@@ -197,7 +197,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     protected class PaintSurface extends JComponent {
-        private Vector<Shape> shapes = new Vector<>();
+        private CopyOnWriteArrayList<Shape> shapes = new CopyOnWriteArrayList<>();
         private ConcurrentHashMap<String, Shape> temperShapes = new ConcurrentHashMap<>();
         Point startDrag, endDrag;
         Path2D path;
