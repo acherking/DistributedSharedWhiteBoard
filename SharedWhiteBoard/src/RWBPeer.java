@@ -176,14 +176,14 @@ public class RWBPeer {
                 remoteRegistry = LocateRegistry.getRegistry(hostName);
                 IRemoteWhiteBoard centerRWB = (IRemoteWhiteBoard) remoteRegistry.lookup(rwbName);
                 RemoteWhiteBoard rwb = new RemoteWhiteBoard(userName, centerRWBName, false, centerRWB);
-                localRegistry.bind(userName+"-"+centerRWBName, rwb);
-                if (centerRWB.enterRequest(userName, localHostName)) {
+                // localRegistry.bind(userName+"-"+centerRWBName, rwb);
+                if (centerRWB.enterRequest(userName, rwb)) {
                     rwb.showWhiteBoard();
                 }
                 else {
                     localRegistry.unbind(userName+"-"+rwbName);
                 }
-            } catch (RemoteException | NotBoundException | AlreadyBoundException e) {
+            } catch (RemoteException | NotBoundException e) {
                 e.printStackTrace();
             }
         }

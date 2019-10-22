@@ -3,10 +3,9 @@ import remote.IRemoteWhiteBoard;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -72,6 +71,11 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     public void exitWhiteBoard() {
         if (isCenter) {
             exitAllRWB();
+            try {
+                exitCurrentWhiteBoard();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
         else {
             try {
@@ -124,6 +128,12 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     @Override
+    public boolean enterRequest(String applierName, IRemoteWhiteBoard rwb) throws RemoteException {
+        addRemoteWhiteBoard(applierName, rwb);
+        return true;
+    }
+
+    @Override
     public void dropoutRequest(String applierName) throws RemoteException {
         removeRemoteWhiteBoard(applierName);
     }
@@ -131,6 +141,12 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     @Override
     public void exitCurrentWhiteBoard() throws RemoteException {
         baseJFrame.setVisible(false);
+        Registry localRegistry = LocateRegistry.getRegistry("localhost");
+        try {
+            localRegistry.unbind(userName+"-"+rwbName);
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
         baseJFrame.dispose();
     }
 
@@ -161,14 +177,20 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
             pathButton.setActionCommand("Path");
             pathButton.addActionListener(this);
 
+            JRadioButton textButton = new JRadioButton("Text");
+            textButton.setActionCommand("Text");
+            textButton.addActionListener(this);
+
             ButtonGroup shapeOption = new ButtonGroup();
             shapeOption.add(rectButton);
             shapeOption.add(ovalButton);
             shapeOption.add(pathButton);
+            shapeOption.add(textButton);
 
             this.add(rectButton);
             this.add(ovalButton);
             this.add(pathButton);
+            this.add(textButton);
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -183,8 +205,8 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
             else if(command.equals("Path")) {
                 currentState = "Path";
             }
-            else if(command.equals("Save as")) {
-                // paintSurface.saveas();
+            else if(command.equals("Text")) {
+                currentState = "Text";
             }
             else {
                 System.out.printf("In ToolBar.actionPerformed: unknown command [%s]\n", command);
@@ -196,15 +218,82 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
 
-    protected class PaintSurface extends JComponent {
+    protected class PaintSurface extends JPanel {
         private CopyOnWriteArrayList<Shape> shapes = new CopyOnWriteArrayList<>();
         private ConcurrentHashMap<String, Shape> temperShapes = new ConcurrentHashMap<>();
         Point startDrag, endDrag;
         Path2D path;
+        Point inputPosition;
+        String inputString;
+        Shape inputStringBound;
+
+        private class MyDispatcher implements KeyEventDispatcher {
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent e) {
+                System.out.printf("In mydispatcher, keycode=%d\n", e.getKeyCode());
+                if (e.getID() == KeyEvent.KEY_PRESSED) {
+                    if (toolBar.getCurrentState().equals("Text") && inputPosition!=null && inputString!=null) {
+                        char inputChar = e.getKeyChar();
+                        if(inputChar>='a' && inputChar<='z') {
+                            inputString = inputString + inputChar;
+                            Shape s = makeTextLayout();
+                            addTemperShape(userName, s, false);
+                            inputStringBound = s.getBounds();
+                            repaint();
+                        }
+                        else if(e.getKeyCode()==KeyEvent.VK_ENTER) {
+                            addDurableShape(userName, makeTextLayout(), false);
+                            inputPosition = null;
+                            inputString = null;
+                            inputStringBound = null;
+                            repaint();
+                        }
+                        else if(e.getKeyCode()==8) {
+                            if (inputString.length()>0) {
+                                inputString = inputString.substring(0, inputString.length() - 1);
+                                if (inputString.length()>0) {
+                                    Shape s = makeTextLayout();
+                                    addTemperShape(userName, s, false);
+                                    inputStringBound = s.getBounds();
+                                }
+                                else {
+                                    temperShapes.remove(userName);
+                                    inputStringBound = null;
+                                }
+                                repaint();
+                            }
+                        }
+                        else {
+                            ;
+                        }
+                    }
+                } else if (e.getID() == KeyEvent.KEY_RELEASED) {
+                    ;
+                } else if (e.getID() == KeyEvent.KEY_TYPED) {
+                    ;
+                }
+                return false;
+            }
+        }
 
         public PaintSurface() {
+            inputPosition = null;
+            inputString = null;
+            this.setFocusable(true);
+
+            KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+            manager.addKeyEventDispatcher(new MyDispatcher());
+
             this.addMouseListener(new MouseAdapter() {
                 public void mousePressed(MouseEvent e) {
+                    if(toolBar.getCurrentState().equals("Text")) {
+                        temperShapes.remove(userName);
+                        inputStringBound = makeRectangle(e.getX(),e.getY(),e.getX()+30, e.getY()+12);
+                        repaint();
+                        inputString = new String();
+                        inputPosition = new Point(e.getX(), e.getY());
+                        return;
+                    }
                     startDrag = new Point(e.getX(), e.getY());
                     endDrag = startDrag;
                     path = new Path2D.Float();
@@ -213,6 +302,9 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
                 }
 
                 public void mouseReleased(MouseEvent e) {
+                    if(toolBar.getCurrentState().equals("Text")) {
+                        return;
+                    }
                     addDurableShape(userName, createNewShape(), false);
                     startDrag = null;
                     endDrag = null;
@@ -223,12 +315,16 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
 
             this.addMouseMotionListener(new MouseMotionAdapter() {
                 public void mouseDragged(MouseEvent e) {
+                    if(toolBar.getCurrentState().equals("Text")) {
+                        return;
+                    }
                     endDrag = new Point(e.getX(), e.getY());
                     path.lineTo(e.getX(), e.getY());
                     addTemperShape(userName, createNewShape(), false);
                     repaint();
                 }
             });
+
         }
         private void paintBackground(Graphics2D g2){
             g2.setPaint(Color.LIGHT_GRAY);
@@ -244,7 +340,9 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
 
 
         }
-        public void paint(Graphics g) {
+        @Override
+        public void paintComponent(Graphics g) {
+            setBackground(Color.WHITE);
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             paintBackground(g2);
@@ -273,6 +371,11 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
                 g2.draw(shape);
             }
 
+            if (inputStringBound!=null) {
+                g2.setPaint(Color.black);
+                g2.draw(inputStringBound);
+            }
+
         }
 
         private Shape createNewShape() {
@@ -288,6 +391,10 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
                     break;
                 case "Path":
                     r = (Shape) path.clone();
+                    break;
+                case "Text":
+                    r = new RoundRectangle2D.Double(inputPosition.getX(), inputPosition.getY(), 50, 20,
+                            10, 10);
                     break;
                 default:
                     System.out.printf("In PaintSurface.createNewShape: unknown currentState [%s]\n", cs);
@@ -353,6 +460,16 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
 
         private Ellipse2D.Float makeEllipse(int x1, int y1, int x2, int y2) {
             return new Ellipse2D.Float(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2));
+        }
+
+        private Shape makeTextLayout() {
+            Graphics2D g2d = (Graphics2D)paintSurface.getGraphics();
+
+            FontRenderContext frc = g2d.getFontRenderContext();
+            AffineTransform transform = new AffineTransform();
+            transform.setToTranslation(inputPosition.getX(), inputPosition.getY()+10);
+            TextLayout tl = new TextLayout(inputString, new Font("Monaco", Font.PLAIN, 18), frc);
+            return tl.getOutline(transform);
         }
     }
 }

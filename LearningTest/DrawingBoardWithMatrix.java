@@ -36,6 +36,7 @@ public class DrawingBoardWithMatrix extends JFrame {
   public DrawingBoardWithMatrix() {
     this.setSize(300, 300);
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    this.setOpaque(true);
     this.add(new PaintSurface(), BorderLayout.CENTER);
 
     toolBar = new ToolBar();
@@ -131,6 +132,8 @@ public class DrawingBoardWithMatrix extends JFrame {
     }
     private void paintBackground(Graphics2D g2){
       g2.setPaint(Color.LIGHT_GRAY);
+      setOpaque(true);
+      setBackground(Color.WHITE);
       for (int i = 0; i < getSize().width; i += 10) {
         Shape line = new Line2D.Float(i, 0, i, getSize().height);
         g2.draw(line);

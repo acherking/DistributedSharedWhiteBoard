@@ -11,6 +11,8 @@ public interface IRemoteWhiteBoard extends Remote {
 
     public boolean enterRequest(String applierName, String remoteHostName) throws RemoteException;
 
+    public boolean enterRequest(String applierName, IRemoteWhiteBoard rwb) throws RemoteException;
+
     public void dropoutRequest(String applierName) throws RemoteException;
 
     public void exitCurrentWhiteBoard() throws RemoteException;

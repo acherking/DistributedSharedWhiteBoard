@@ -2,9 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f26e1c1c-04fa-440a-9c1f-f6aba630af63" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Demo1/Demo1.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Demo1/src/RWBPeer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Demo1/src/RemoteCenterServer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Demo1/src/remote/IRemoteCenterServer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/HitTestSample.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../LearningTest/DrawingBoardWithMatrix.java" beforeDir="false" afterPath="$PROJECT_DIR$/../LearningTest/DrawingBoardWithMatrix.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/RWBPeer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/RWBPeer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/RemoteWhiteBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/RemoteWhiteBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/remote/IRemoteWhiteBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/remote/IRemoteWhiteBoard.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -43,7 +50,14 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.RWBPeer">
+    <configuration name="HitTestSample" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="HitTestSample" />
+      <module name="SharedWhiteBoard" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="RWBPeer" type="Application" factoryName="Application" singleton="false" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="RWBPeer" />
       <module name="SharedWhiteBoard" />
@@ -51,9 +65,23 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="simpleTransparentJTF" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="simpleTransparentJTF" />
+      <module name="SharedWhiteBoard" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.HitTestSample" />
+      <item itemvalue="Application.simpleTransparentJTF" />
+      <item itemvalue="Application.RWBPeer" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Application.RWBPeer" />
+        <item itemvalue="Application.simpleTransparentJTF" />
+        <item itemvalue="Application.HitTestSample" />
       </list>
     </recent_temporary>
   </component>
@@ -71,7 +99,8 @@
       <workItem from="1569550467800" duration="29208000" />
       <workItem from="1570161946040" duration="20000" />
       <workItem from="1570162004324" duration="4857000" />
-      <workItem from="1570173127873" duration="927000" />
+      <workItem from="1570173127873" duration="32234000" />
+      <workItem from="1571486690338" duration="14282000" />
     </task>
     <servers />
   </component>
@@ -83,7 +112,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
