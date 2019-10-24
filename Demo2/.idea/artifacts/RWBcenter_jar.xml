@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="RWBcenter:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/RWBcenter_jar</output-path>
+    <root id="archive" name="RWBcenter.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/CenterServer-META/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="Demo2" />
+    </root>
+  </artifact>
+</component>
