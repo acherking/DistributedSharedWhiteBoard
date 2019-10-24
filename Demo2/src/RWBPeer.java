@@ -19,6 +19,7 @@ import java.rmi.registry.Registry;
 import java.util.Vector;
 
 public class RWBPeer {
+    private RWBPeer thisPeer;
     private Vector<RemoteWhiteBoard> RWBsList;
     private JFrame inputNameJFrame;
     private JFrame connectRWBJFrame;
@@ -33,6 +34,7 @@ public class RWBPeer {
     private String boundUserName;
 
     public RWBPeer(String remoteHostName) {
+        thisPeer = this;
         RWBsList = new Vector<>();
         boundUserName = null;
         try {
@@ -172,6 +174,10 @@ public class RWBPeer {
         inputNameJFrame.setVisible(true);
     }
 
+    public void rmMyRWB(RemoteWhiteBoard rwb) {
+        RWBsList.remove(rwb);
+    }
+
     private void unbindAll() {
         try {
             String[] rwbNameList = localRegistry.list();
@@ -290,7 +296,7 @@ public class RWBPeer {
                 IRemoteWhiteBoard centerRWB = centerServer.getRWB(centerRWBFullName);
                 if (centerRWB != null) {
                     String rwbName = centerRWBFullName.split("-")[1];
-                    RemoteWhiteBoard rwb = new RemoteWhiteBoard(boundUserName, rwbName, false, centerRWB, null);
+                    RemoteWhiteBoard rwb = new RemoteWhiteBoard(boundUserName, rwbName, false, centerRWB, null, thisPeer);
                     // localRegistry.bind(boundUserName+"-"+rwbName, rwb);
                     if (centerRWB.enterRequest(boundUserName, rwb)) {
                         rwb.setInfoJFrame("Waiting acceptance.");
@@ -318,7 +324,7 @@ public class RWBPeer {
             }
 
             try {
-                RemoteWhiteBoard rwb = new RemoteWhiteBoard(boundUserName, rwbName,true, null, centerServer);
+                RemoteWhiteBoard rwb = new RemoteWhiteBoard(boundUserName, rwbName,true, null, centerServer, thisPeer);
                 if (centerServer.addRWB(boundUserName, rwbName, rwb)) {
                     RWBsList.add(rwb);
                     // localRegistry.bind(boundUserName+"-"+rwbName, rwb);

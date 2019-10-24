@@ -11,14 +11,16 @@ public class WhiteBoardMenu extends JMenuBar {
     private String currentShape = "Line";
     private Color currentColor = Color.BLACK;
 
-    public WhiteBoardMenu(JMenu fileJmenu) {
+    public WhiteBoardMenu(JMenu fileJmenu, boolean isCenter) {
         this.setToolTipText("File");
         this.setForeground(new Color(0, 0, 0));
         this.setFont(new Font("Georgia", Font.PLAIN, 12));
         this.setMargin(new Insets(0, 0, 0, 50));
 
-        fileJmenu.setFont(new Font("Georgia", Font.PLAIN, 12));
-        this.add(fileJmenu);
+        if(isCenter) {
+            fileJmenu.setFont(new Font("Georgia", Font.PLAIN, 12));
+            this.add(fileJmenu);
+        }
 
         JMenu mnShape = new JMenu("Shape");
         mnShape.setFont(new Font("Georgia", Font.PLAIN, 12));

@@ -2,16 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f26e1c1c-04fa-440a-9c1f-f6aba630af63" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../Demo1/Demo1.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Demo1/src/RWBPeer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Demo1/src/RemoteCenterServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Demo1/src/remote/IRemoteCenterServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/HitTestSample.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../LearningTest/DrawingBoardWithMatrix.java" beforeDir="false" afterPath="$PROJECT_DIR$/../LearningTest/DrawingBoardWithMatrix.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RWBPeer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/RWBPeer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RemoteWhiteBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/RemoteWhiteBoard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/remote/IRemoteWhiteBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/remote/IRemoteWhiteBoard.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -100,7 +91,7 @@
       <workItem from="1570161946040" duration="20000" />
       <workItem from="1570162004324" duration="4857000" />
       <workItem from="1570173127873" duration="32234000" />
-      <workItem from="1571486690338" duration="14282000" />
+      <workItem from="1571486690338" duration="14905000" />
     </task>
     <servers />
   </component>

@@ -1,0 +1,18 @@
+How to execute RemoteWhiteboard application:
+
+
+Download RWBcenter.jar and RWBPeer.jar
+
+1.Mac
+(1) $rmiregistry -J-Djava.rmi.server.codebase=file:[full path of RWBcenter.jar]/RWBcenter.jar
+(2) switch to the folder which contains RWBcenter.jar and RWBPeer.jar
+(3) $java -jar RWBcenter.jar
+(4) $java -jar RWBPeer.jar
+
+
+
+2.Windows
+(1) > rmiregistry -J-Djava.rmi.server.codebase=file:[full path of RWBcenter.jar]\RWBcenter.jar
+(2) switch to the folder which contains RWBcenter.jar and RWBPeer.jar
+(3) > java -jar RWBcenter.jar
+(4) > java -jar RWBPeer.jar

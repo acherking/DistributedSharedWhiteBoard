@@ -10,10 +10,7 @@ import java.awt.font.TextLayout;
 import java.awt.geom.*;
 import java.io.*;
 import java.net.URLDecoder;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,15 +35,16 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     private boolean waitingAccept;
     private IRemoteWhiteBoard centerWhiteBoard;
     private IRemoteCenterServer centerServer;
+    private RWBPeer myPeer;
     // for center whiteboard to synchronize data(shape, message)
     private ConcurrentHashMap<String, IRemoteWhiteBoard> connectedWhiteBoards;
     private ConcurrentHashMap<String, IRemoteWhiteBoard> requestWhiteBoards;
 
     private JTextField fileNameText;
-    private JFrame save=new JFrame("save");
-    private JFrame saveSuccessfulOrNot;
-    private JFrame open;
-    private JFrame saveas=new JFrame("saveas");
+    private JFrame saveJFrame = new JFrame("Save");
+    private JFrame saveResultJFrame;
+    private JFrame openJFrame;
+    private JFrame saveAsJFrame = new JFrame("Save-As");
 
 
     public RemoteWhiteBoard() throws RemoteException {
@@ -60,11 +58,12 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     public RemoteWhiteBoard(String userName, String rwbName, boolean isCenter,
-                            IRemoteWhiteBoard centerRWB, IRemoteCenterServer centerServer) throws RemoteException {
+                            IRemoteWhiteBoard centerRWB, IRemoteCenterServer centerServer, RWBPeer peer) throws RemoteException {
         this();
         this.userName = userName;
         this.rwbName = rwbName;
         this.isCenter = isCenter;
+        this.myPeer = peer;
 
         if (this.isCenter)  {
             this.waitingAccept = false;
@@ -130,7 +129,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         baseJFrame.add(sidePanel, BorderLayout.EAST);
 
         initMyFileMenu();
-        whiteBoardMenu = new WhiteBoardMenu(myFileMenu);
+        whiteBoardMenu = new WhiteBoardMenu(myFileMenu, this.isCenter);
 
 
         baseJFrame.setJMenuBar(whiteBoardMenu);
@@ -192,7 +191,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
 
     private void initMyFileMenu() {
         myFileMenu = new JMenu("File");
-        myFileMenu.setFont(new Font("Georgia", Font.PLAIN, 12));
+        // myFileMenu.setFont(new Font("Georgia", Font.PLAIN, 12));
 
         JMenuItem mntmOpen = new JMenuItem("Open");
         mntmOpen.setFont(new Font("Georgia", Font.PLAIN, 12));
@@ -232,7 +231,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         myFileMenu.add(mntmClose);
         mntmClose.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                baseJFrame.setVisible(false);
+                exitWhiteBoard();
             }
         });
     }
@@ -307,6 +306,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         } catch (NotBoundException e) {
             e.printStackTrace();
         }*/
+        myPeer.rmMyRWB(this);
         baseJFrame.dispose();
         informJFrame.dispose();
     }
@@ -407,6 +407,23 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
 
+    public void rmTheCUToAllRWBs(String userName) {
+        Set<Map.Entry<String, IRemoteWhiteBoard>> entrySet = connectedWhiteBoards.entrySet();
+        Iterator<Map.Entry<String, IRemoteWhiteBoard>> itr = entrySet.iterator();
+        while (itr.hasNext()) {
+            Map.Entry<String, IRemoteWhiteBoard> entry = itr.next();
+            String ownerName = entry.getKey();
+            if(!ownerName.equals(userName)) {
+                IRemoteWhiteBoard rwb = entry.getValue();
+                try {
+                    rwb.rmConnectedUser(userName);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     private class UserManagerPanel extends JPanel {
         JList<String> connectedUserJList;
         JList<String> requestUserJList;
@@ -431,11 +448,12 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
                 public void actionPerformed(ActionEvent e) {
                     String kickUserName = connectedUserJList.getSelectedValue();
                     if (kickUserName!=null) {
-                        if(!kickUserName.split("-")[1].equals("self")) {
+                        if(kickUserName.split("-").length==1) {
                             try {
                                 IRemoteWhiteBoard rwb = connectedWhiteBoards.get(kickUserName);
                                 connectedWhiteBoards.remove(kickUserName);
                                 removeConnectedUser(kickUserName);
+                                rmTheCUToAllRWBs(kickUserName);
                                 rwb.kickRWB();
                             } catch (RemoteException ex) {
                                 ex.printStackTrace();
@@ -693,6 +711,18 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
             }
         }
 
+        public void synDurableShapesToAll() {
+            for(IRemoteWhiteBoard rwb : connectedWhiteBoards.values()) {
+                try {
+                    rwb.clearWhiteBoard();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                synDurableShapesTo(rwb);
+
+            }
+        }
+
         public void clearAllShapes() {
             shapes.clear();
             temperShapes.clear();
@@ -906,10 +936,10 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
 
     }
     public void save() {
-        save.setVisible(true);
-        save.setBounds(300,300,400,400);
+        saveJFrame.setVisible(true);
+        saveJFrame.setBounds(300,300,400,400);
         JPanel savePanel=new JPanel();
-        save.add(savePanel);
+        saveJFrame.add(savePanel);
         savePanel.setOpaque(false);
         savePanel.setLayout(null);
         JLabel w=new JLabel("Are you sure to save?");
@@ -924,7 +954,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         savePanel.add(w);
         savePanel.add(fileNameText);
         savePanel.setVisible(true);
-        save.setVisible(true);
+        saveJFrame.setVisible(true);
     }
     public void saveFile(String filePath,CopyOnWriteArrayList<MyShape> theShape){
         try {
@@ -939,11 +969,11 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
     public void open() {
-        open=new JFrame("open");
-        open.setVisible(true);
+        openJFrame =new JFrame("Open");
+        openJFrame.setVisible(true);
         JFileChooser jfc = new JFileChooser();
-        open.add(jfc);
-        open.addWindowListener(new myWindowListener());
+        openJFrame.add(jfc);
+        openJFrame.addWindowListener(new myWindowListener());
         String[] filterString = {".rwb"};
         MyFilter filter = new MyFilter(filterString);
         String jarFilePath = RemoteWhiteBoard.class.getProtectionDomain().getCodeSource().getLocation().getFile();
@@ -951,7 +981,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         jfc.setFileFilter(filter);
         int state=jfc.showOpenDialog(null);
         if(state!=JFileChooser.APPROVE_OPTION){
-            open.setVisible(false);
+            openJFrame.setVisible(false);
         }
         else{
             File fl = jfc.getSelectedFile();
@@ -970,14 +1000,16 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
             }
             paintSurface.setShapes(theShape);
             paintSurface.repaint();
+            paintSurface.synDurableShapesToAll();
             paintSurface.setFileName(fileNn.substring(0, fileNn.length() - 4));
         }
-        }
+    }
+
     public void saveas() { ;
-        saveas.setVisible(true);
+        saveAsJFrame.setVisible(true);
         JFileChooser jfc = new JFileChooser();
-        saveas.add(jfc);
-        saveas.addWindowListener(new myWindowListener());
+        saveAsJFrame.add(jfc);
+        saveAsJFrame.addWindowListener(new myWindowListener());
         String jarFilePath = RemoteWhiteBoard.class.getProtectionDomain().getCodeSource().getLocation().getFile();
         try {
             jarFilePath = URLDecoder.decode(jarFilePath, "UTF-8");
@@ -987,7 +1019,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         jfc.setCurrentDirectory(new File(jarFilePath));
         int state=jfc.showSaveDialog(null);
         if(state!=JFileChooser.APPROVE_OPTION){
-            saveas.setVisible(false);
+            saveAsJFrame.setVisible(false);
         }
         else{
             File fl = jfc.getSelectedFile();
@@ -998,15 +1030,15 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
     }
     
     public void saveSuccessful(){
-        save.setVisible(false);
-        saveas.setVisible(false);
-        saveSuccessfulOrNot=new JFrame("successful");
-        saveSuccessfulOrNot.setVisible(true);
-        saveSuccessfulOrNot.setBounds(300,300,350,220);
+        saveJFrame.setVisible(false);
+        saveAsJFrame.setVisible(false);
+        saveResultJFrame =new JFrame("successful");
+        saveResultJFrame.setVisible(true);
+        saveResultJFrame.setBounds(300,300,350,220);
         JPanel sPanal=new JPanel();
         sPanal.setOpaque(false);
         sPanal.setLayout(null);
-        saveSuccessfulOrNot.add(sPanal);
+        saveResultJFrame.add(sPanal);
         JLabel saveSuccessful=new JLabel("Save the file Successful!");
         saveSuccessful.setBounds(80,50,200,50);
         JButton close=new JButton("close");
@@ -1017,13 +1049,13 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
         sPanal.add(close);
     }
     public void saveFailed(){
-        saveSuccessfulOrNot=new JFrame("faild");
-        saveSuccessfulOrNot.setVisible(true);
-        saveSuccessfulOrNot.setBounds(300,300,350,220);
+        saveResultJFrame =new JFrame("faild");
+        saveResultJFrame.setVisible(true);
+        saveResultJFrame.setBounds(300,300,350,220);
         JPanel sPanal=new JPanel();
         sPanal.setOpaque(false);
         sPanal.setLayout(null);
-        saveSuccessfulOrNot.add(sPanal);
+        saveResultJFrame.add(sPanal);
         JLabel saveSuccessful=new JLabel("Save the file falid!");
         saveSuccessful.setBounds(80,50,200,50);
         JButton close=new JButton("close");
@@ -1044,7 +1076,7 @@ public class RemoteWhiteBoard extends UnicastRemoteObject implements IRemoteWhit
                 saveFile(paintSurface.fileName+".rwb",theShape);
             }
             else if(command.equals("close")){
-                saveSuccessfulOrNot.setVisible(false);
+                saveResultJFrame.setVisible(false);
             }
         }
     }
