@@ -1,1 +1,1 @@
-# DistributedSharedWhiteBoard
+# Distributed Shared WhiteBoard
